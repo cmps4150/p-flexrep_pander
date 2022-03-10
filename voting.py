@@ -1,9 +1,13 @@
+import numpy as np
 
 """
 Gives agreement between x and y (both numpy arrays!!)
 """
 def agreement(x, y):
     return 1 - sum(abs(x - y))
+
+def num_agreement(x, y):
+    return sum(abs(x-y))
 
 """
 Gets preferences of voters on candidates by ordering them based on their agreement.
@@ -26,6 +30,16 @@ def get_preferences_on_candidates(pvs, ppc, pmc):
         agreements.sort()
         pvc.append(agreements)
     return np.array(pvc)
+
+def get_approval_ballots(pvs, ppc, pmc):
+    weights = []
+    for voter in pvs:
+        weights = [num_agreements(voter, ppc[i]) for i in range(len(ppc))]
+        weights.append(num_agreements(voter, pmc))
+
+    ballots = [(weights[i]/sum(weights), i) for i in range(len(weights))]
+    return ballots
+
 
 def borda(pvc):
     # create scores that are initially 0 for all candidates
