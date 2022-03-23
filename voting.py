@@ -4,7 +4,8 @@ import numpy as np
 Gives agreement between x and y (both numpy arrays!!)
 """
 def agreement(x, y):
-    return 1 - sum(abs(x - y))
+    assert len(x) == len(y)
+    return 1 - (1/len(x)) * sum(x ^ y)
 
 def num_agreement(x, y):
     return sum(abs(x-y))
@@ -23,9 +24,9 @@ def get_preferences_on_candidates(pvs, ppc, pmc):
     # loop over voter preference profiles on votes
     for voter in pvs:
         # get the agreement of the voter with each candidate
-        agreements = [(agreement(voter, ppc[i]), i) for i in range(len(ppc))]
+        agreements = [(agreement(voter, ppc[i]), i + 1) for i in range(len(ppc))]
         # get agreement with the malicious candidate
-        agreements.append((agreement(voter, pmc), len(ppc)))
+        agreements.append((agreement(voter, pmc), len(ppc) + 1))
         # sort so that highest agreement is last
         agreements.sort()
         pvc.append(agreements)
