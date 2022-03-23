@@ -1,8 +1,13 @@
+import numpy as np
+
 """
 Gives agreement between x and y (both numpy arrays!!)
 """
 def agreement(x, y):
     return 1 - sum(abs(x - y))
+
+def num_agreement(x, y):
+    return sum(abs(x-y))
 
 """
 Gets preferences of voters on candidates by ordering them based on their agreement.
