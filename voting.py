@@ -1,4 +1,42 @@
 import numpy as np
+from numpy.random import default_rng
+
+class Candidate:
+    def __init__(self, nissues, pvs):
+        self.rng = default_rng()
+        self.nissues = nissues
+        self.private_profile = rng.choice([True, False], size=nissues)
+        self.honesty = 1
+        self.change = 0
+        self.set_public_profile(pvs)
+
+class MaliciousCandidate(Candidate):
+    """
+    Defines a malicious (pandering) candidate
+    All of the same attributes as Candidate, and additionally:
+        change - the proportion of issues the candidate will change to match
+                 public opinion
+    """
+    def get_change(results=None):
+        # if there are no results, proportion of issues that will be changed is 0
+        if results is None:
+            self.change = self.rng.random()
+        else:
+            pass
+
+    def set_public_profile(self, pvs):
+        # get popular positions on issues
+        # deviate from private profile based on parameter `change`
+        # action of malicious candidate
+        # one round: given from results of MIP
+        # multiround: given from RL results
+        pass
+
+
+class HonestCandidate(Candidate):
+    def set_public_profile(self, pvs):
+        self.public_profile = self.private_profile
+
 
 """
 Gives agreement between x and y (both numpy arrays!!)
@@ -14,10 +52,9 @@ def num_agreement(x, y):
 Gets preferences of voters on candidates by ordering them based on their agreement.
 Params:
     pvs - voter preference profile on issues (np array of size (num voters, num issues))
-    ppc - public candidate preference profile (np array of size (num cans - 1, num issues))
-    pmc - public preferences of malicious candidate (np array of size (num issues))
+    ppc - public candidate preference profile (np array of size (num cans, num issues))
 """
-def get_preferences_on_candidates(pvs, ppc, pmc):
+def get_preferences_on_candidates(pvs, ppc):
     # the ith entry is the ith voters ranking of candidates, so
     # pvc[i][0] = (lowest agreement value, lowest agreement index) for voter i
     pvc = []
@@ -25,8 +62,6 @@ def get_preferences_on_candidates(pvs, ppc, pmc):
     for voter in pvs:
         # get the agreement of the voter with each candidate
         agreements = [(agreement(voter, ppc[i]), i + 1) for i in range(len(ppc))]
-        # get agreement with the malicious candidate
-        agreements.append((agreement(voter, pmc), len(ppc) + 1))
         # sort so that highest agreement is last
         agreements.sort()
         pvc.append(agreements)
@@ -199,3 +234,62 @@ MAY HAVE TO CHANGE THIS BASED ON VOTING RULE
 def get_committee(pvc, vr, k):
     scores = vr(pvc)
     return scores[:k]
+
+
+"""
+Get the outcome of an election in a representative democracy
+Params:
+    committee - list of Candidate objects
+    nissues - the number of issues under consideration
+"""
+def get_outcomes_rd(committee, nissues):
+    outcomes = []
+    for i in range(nissues):
+        yes = sum([can.private_profile[i] for can in commitee]) >= len(committee)//2 #True if majority of candidates voted 1 for issue
+        outcomes.append(yes)
+    return np.array(outcomes)
+
+"""
+Get the outcome of an election in a flexible representative democracy
+Params:
+    committee - list of Candidate objects
+    nissues - the number of issues under consideration
+    pvs - voters preference on issues
+"""
+def get_outcomes_frd(committee, nissues, pvs):
+    rng = default_rng()
+    # outcomes is a list of booleans with the length of the issues
+    outcomes = np.zeros(size=nissues)
+    for i in range(nissues):
+        # weights is a list of weights that voters delegate to each candidate for each issue
+        weights = np.zeros(size=len(committee))
+        for voter in pvs:
+            yes = voter[i]  # voter's opinion on issue i
+
+            #see which candidates the voter will delegate to (if any) based on agreement
+            delegate_to = []
+            for c in range(len(committee)):
+                can = commitee[c]
+                # if they agree on the issue
+                if yes == can.private_profile[i]:
+                    if rng.choice([True, False], p=[alpha * can.honesty, 1 - (alpha * can.honesty)]):
+                        delegate_to.append(c)
+                # update malicious candidate's honesty if deviate
+                if can.private_profile[i] != can.public_profile[i]:
+                    # Multiple choices: exponential decay / constant decay
+                    can.honesty = can.honesty * 0.8
+                    # can.honesty = max(can.honesty - 0.1, 0)
+            # default distribution mechanism, equal weight to all committee members
+            if len(delegate_to) == 0:
+                weights += 1/len(committee)
+            #otherwise, weights distributed over candidates the voter delegates to
+            else:
+                for j in delegate_to:
+                    weights[j] += 1/(len(delegate_to))
+        # total weight of committee members who vote yes on issue i
+        yes_weight = 0
+        for c in len(committee):
+            if committee[c].private_profile[i]:
+                yes_weight += weights[c]
+        outcomes[i] = yes_weight / len(pvs) >= .5
+    return outcomes
