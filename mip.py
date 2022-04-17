@@ -1,5 +1,25 @@
 from numpy.random import default_rng
 import gurobipy as gpy
+from gurobipy import GRB
+
+class MaliciousCandidate(Candidate):
+    """
+    Defines a malicious (pandering) candidate
+    """
+
+    """
+    Set the malicious candidate's public profile. Depends on the voters preference
+    Parameters:
+        m : the number of issues the voter changes to maximize the agreement
+            between its private profile and the outcome
+    """
+    def set_public_profile(self, differences, m):
+        # get the issues where the attacker differs from public opinion
+        differences = differences[:m] #assuming the candidate switches on issues for which they differ most
+        public_profile = self.private_profile
+        diff_inds = [x[0] for x in differences]
+        for ind in diff_inds:
+            public_profile[ind] = not public_profile[ind]
 
 class MIP:
     def __init__(ncans, k, nvoters, nissues, vr=weights, frd=False):
@@ -16,9 +36,14 @@ class MIP:
         malicious = MaliciousCandidate(self.nissues)
         self.candidates.append(malicious)
 
+        differences = diff_public_attacker(self.nissues, self.pvs, self.candidates[-1].private_profile, self.nvoters)
+
         model = gpy.Model("Voting")
         # all issues that differ from the malicious candidate and public opinion
-        model.addVars()
+        m = model.addVar(ub=self.nissues, vtype=GRB.INTEGER)
+
+        model.setObjective()
+
 
 
     def run_round():
@@ -29,3 +54,15 @@ class MIP:
             self.outcomes = get_outcomes_frd(committee, self.nissues, self.pvs)
         else:
             self.outcomes = get_outcomes_rd(committee, self.nissues)
+
+constant = sum(outcome[i] - private_profile[i] for i not in diff_inds)
+model.setObjective(1 - 1/N * (sum(outcome[i] - private_profile[i] for i in diff_inds)) + constant)
+outcome = [sum(delegate_preferences_on_issues[i]) for i in range(num_issues)]
+delegates =
+
+"""
+M = model.addVars(N, vtype=GRB.BINARY)
+model.setObjective(1- (1/N) * sum(outcome[i] - M[i])
+diff(pref, M) -> how many deviated
+
+"""
