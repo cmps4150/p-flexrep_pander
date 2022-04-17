@@ -14,7 +14,7 @@ class MIP:
 
         self.candidates = [HonestCandidate(self.nissues) for _ in range(ncans - 1)]
         malicious = MaliciousCandidate(self.nissues)
-        self.candidates.append()
+        self.candidates.append(malicious)
 
         model = gpy.Model("Voting")
         # all issues that differ from the malicious candidate and public opinion

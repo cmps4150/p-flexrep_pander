@@ -246,6 +246,15 @@ def get_outcomes_rd(committee, nissues):
     outcomes = []
     for i in range(nissues):
         yes = sum([can.private_profile[i] for can in commitee]) >= len(committee)//2 #True if majority of candidates voted 1 for issue
+        # update malicious candidate's honesty if deviate
+        for can in commitee:
+            if can.private_profile[i] != can.public_profile[i]:
+                # Multiple choices: exponential decay / constant decay
+                can.honesty = can.honesty * 0.8
+                # can.honesty = max(can.honesty - 0.1, 0)
+            #honesty recovers a little bit if not deviate
+            else:
+                can.honesty = can.honesty *1.05
         outcomes.append(yes)
     return np.array(outcomes)
 
@@ -279,6 +288,9 @@ def get_outcomes_frd(committee, nissues, pvs):
                     # Multiple choices: exponential decay / constant decay
                     can.honesty = can.honesty * 0.8
                     # can.honesty = max(can.honesty - 0.1, 0)
+                #honesty recovers a little bit if not deviate
+                else:
+                    can.honesty = can.honesty *1.05
             # default distribution mechanism, equal weight to all committee members
             if len(delegate_to) == 0:
                 weights += 1/len(committee)
