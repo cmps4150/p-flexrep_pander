@@ -39,6 +39,28 @@ class HonestCandidate(Candidate):
 
 
 """
+Get difference between public majority opinion and malicious's private profile
+
+Return a np-array of (issue index, number of voters agree)
+"""
+def diff_public_attacker(nissues, pvs, ppc, nvoters):
+    public_agreement = []
+    public_weight = np.sum(pvs, axis = 1)
+    #print(public_weight)
+    diff = []
+    for i in range(nissues):
+        if public_weight[i]>= nvoters/2:
+            result = True
+        else:
+            result = False
+        if result != ppc[i]:
+            diff.append((i, max(public_weight[i], nvoters-public_weight[i])))
+    dtype = [('index', int), ('weight', int)]
+    diff = np.asarray(diff, dtype = dtype)
+    diff = np.flip(np.sort(diff, order = 'weight'))
+    return diff
+
+"""
 Gives agreement between x and y (both numpy arrays!!)
 """
 def agreement(x, y):
