@@ -1,20 +1,40 @@
+Skip to content
+Search or jump to…
+Pull requests
+Issues
+Marketplace
+Explore
+
+@jnmasur
+cmps4150
+/
+p-flexrep
+Private
+Code
+Issues
+Pull requests
+Actions
+Projects
+Security
+Insights
+Settings
+p-flexrep/mip.py /
+@SliencerX
+SliencerX RL runs, fix bugs
+Latest commit daf0ed6 4 days ago
+ History
+ 2 contributors
+@SliencerX@jnmasur
+68 lines (55 sloc)  2.46 KB
+
 from numpy.random import default_rng
 import gurobipy as gpy
-from voting import *
+from gurobipy import GRB
 
 class MaliciousCandidate(Candidate):
     """
     Defines a malicious (pandering) candidate
-    All of the same attributes as Candidate, and additionally:
-        change - the proportion of issues the candidate will change to match
-                 public opinion
     """
-    def get_change(results=None):
-        # if there are no results, proportion of issues that will be changed is 0
-        if results is None:
-            self.change = self.rng.random()
-        else:
-            pass
 
     """
     Set the malicious candidate's public profile. Depends on the voters preference
@@ -22,14 +42,13 @@ class MaliciousCandidate(Candidate):
         m : the number of issues the voter changes to maximize the agreement
             between its private profile and the outcome
     """
-    def set_public_profile(self, pvs, m):
-        # get the
-        differences = diff_public_attacker(nissues, pvs, ppc, nvoters)
-        # deviate from private profile based on parameter `change`
-        # action of malicious candidate
-        # one round: given from results of MIP
-        # multiround: given from RL results
-        pass
+    def set_public_profile(self, differences, m):
+        # get the issues where the attacker differs from public opinion
+        differences = differences[:m] #assuming the candidate switches on issues for which they differ most
+        public_profile = self.private_profile
+        diff_inds = [x[0] for x in differences]
+        for ind in diff_inds:
+            public_profile[ind] = not public_profile[ind]
 
 class MIP:
     def __init__(ncans, k, nvoters, nissues, vr=weights, frd=False):
@@ -46,9 +65,15 @@ class MIP:
         malicious = MaliciousCandidate(self.nissues)
         self.candidates.append(malicious)
 
+        differences = diff_public_attacker(self.nissues, self.pvs, self.candidates[-1].private_profile, self.nvoters)
+
         model = gpy.Model("Voting")
         # all issues that differ from the malicious candidate and public opinion
-        model.addVars()
+        m = model.addVar(ub=self.nissues, vtype=GRB.INTEGER)
+
+        model.setObjective()
+
+
 
     def run_round():
         ppc = [can.public_profile for can in self.candidates]
@@ -58,3 +83,14 @@ class MIP:
             self.outcomes = get_outcomes_frd(committee, self.nissues, self.pvs)
         else:
             self.outcomes = get_outcomes_rd(committee, self.nissues)
+
+constant = sum(outcome[i] - private_profile[i] for i not in diff_inds)
+model.setObjective(1 - 1/N * (sum(outcome[i] - private_profile[i] for i in diff_inds)) + constant)
+outcome = [sum(delegate_preferences_on_issues[i]) for i in range(num_issues)]
+delegates =
+
+"""
+M = model.addVars(N, vtype=GRB.BINARY)
+model.setObjective(1- (1/N) * sum(outcome[i] - M[i])
+diff(pref, M) -> how many deviated
+"""

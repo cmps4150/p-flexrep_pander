@@ -10,33 +10,32 @@ class Candidate:
         self.change = 0
         self.set_public_profile(pvs)
 
-class MaliciousCandidate(Candidate):
-    """
-    Defines a malicious (pandering) candidate
-    All of the same attributes as Candidate, and additionally:
-        change - the proportion of issues the candidate will change to match
-                 public opinion
-    """
-    def get_change(results=None):
-        # if there are no results, proportion of issues that will be changed is 0
-        if results is None:
-            self.change = self.rng.random()
-        else:
-            pass
-
-    def set_public_profile(self, pvs):
-        # get popular positions on issues
-        # deviate from private profile based on parameter `change`
-        # action of malicious candidate
-        # one round: given from results of MIP
-        # multiround: given from RL results
-        pass
-
 
 class HonestCandidate(Candidate):
     def set_public_profile(self, pvs):
         self.public_profile = self.private_profile
 
+"""
+Get difference between public majority opinion and malicious's private profile
+
+Return a np-array of (issue index, number of voters agree)
+"""
+def diff_public_attacker(nissues, pvs, ppc, nvoters):
+    public_agreement = []
+    public_weight = np.sum(pvs, axis = 1)
+    #print(public_weight)
+    diff = []
+    for i in range(nissues):
+        if public_weight[i]>= nvoters/2:
+            result = True
+        else:
+            result = False
+        if result != ppc[i]:
+            diff.append((i, max(public_weight[i], nvoters-public_weight[i])))
+    dtype = [('index', int), ('weight', int)]
+    diff = np.asarray(diff, dtype = dtype)
+    diff = np.flip(np.sort(diff, order = 'weight'))
+    return diff
 
 """
 Get difference between public majority opinion and malicious's private profile
@@ -244,7 +243,7 @@ def weights(pvc):
             cand = int(ranking[i][1])
             scores[cand - 1][0] += ranking[i][0] / tot
     scores.sort(reverse=True)
-    print(scores)
+    #print(scores)
     return [x[1] for x in scores]
 
 """
@@ -267,9 +266,9 @@ Params:
 def get_outcomes_rd(committee, nissues):
     outcomes = []
     for i in range(nissues):
-        yes = sum([can.private_profile[i] for can in commitee]) >= len(committee)//2 #True if majority of candidates voted 1 for issue
+        yes = sum([can.private_profile[i] for can in committee]) >= len(committee)//2 #True if majority of candidates voted 1 for issue
         # update malicious candidate's honesty if deviate
-        for can in commitee:
+        for can in committee:
             if can.private_profile[i] != can.public_profile[i]:
                 # Multiple choices: exponential decay / constant decay
                 can.honesty = can.honesty * 0.8
