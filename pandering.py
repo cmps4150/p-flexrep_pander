@@ -22,14 +22,6 @@ if __name__ == '__main__':
     session.evaluate('distanceFunction[a : binVec][b : binVec] := HammingDistance[a, b];')
     session.evaluate('numApprovals[x : {binVec ..}, ys : binVec, k_] := Length[Select[Map[distanceFunction[ys], x], (# <= k) &]];')
 
-    #version without constraint, but with optional penalty
-    session.evaluate('maximizeApprovals[x : {binVec ..}, k_, penalty_ : (0 &)] := \
-      Module[{y}, \
-       With[{ys = Array[y, Length[First[x]]]}, \
-        Maximize[{numApprovals[x, ys, k] + penalty[ys], \
-           Thread[0 <= ys <= 1]}, \
-          ys \[Element] Integers] // {First[#], ys /. Last[#]} &]];')
-
     #version with constraint, via suitably large penalty
     session.evaluate('maximizeApprovals[x_, k_, ref_, j_] := \
       With[{p = -Length[x] - 1}, \
