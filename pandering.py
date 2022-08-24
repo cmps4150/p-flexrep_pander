@@ -1,5 +1,7 @@
 '''
 Compute pandering strategies for strategic representatives
+
+Acknowledgement: https://mathematica.stackexchange.com/questions/271309/find-binary-vector-within-fixed-distance-to-reference-vector-that-maximizes-the
 '''
 import numpy as np
 import pandas as pd
