@@ -15,7 +15,7 @@ from numpy.random import default_rng
 from stable_baselines3 import SAC, PPO
 from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.callbacks import CheckpointCallback
-from voting_env_one_round import *
+from train_voting import *
 
 def test_RD():
     model = PPO.load("RD_oneround_votes_allobs_1/rl_model_10000000_steps.zip")

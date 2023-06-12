@@ -1,0 +1,6 @@
+gym==0.21.0
+matplotlib==3.6.1
+numpy==1.23.3
+pandas==1.5.0
+stable_baselines3==1.6.2
+wolframclient==1.1.7
